@@ -1,2 +1,2 @@
 # TAUV-Tools
-Scripts for data processing, training, and other assorted tasks
+Scripts for data processing, training, data labeling, and other assorted tasks
