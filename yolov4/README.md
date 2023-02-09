@@ -15,7 +15,10 @@
 3. Edit 'obj.names' template file. Each class name is on a new line in the same order as in the 'class_list.txt' file in 'obj.zip'.  
 4. Edit 'obj.data' template file. Fill in the number of classes.
 5. Ensure that the 'process.py' has the correct format (currently .jpg) matching training data. 
-6. Follow the following commands in your local directory to set up the training. 
+6. Edit '/darknet/Makefile' to enable the following: OPENCV=1, GPU=1, CUDNN=1, CUDNN_HALF=1, LIBSO=1.
+7. Run command ```make``` to build darknet. 
+8. ...
+9. Follow the following commands in your local directory to set up the training. 
 
 ## Training 
 
