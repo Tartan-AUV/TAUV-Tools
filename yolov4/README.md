@@ -11,8 +11,8 @@ Includes:
 
 Directions:
 1. Follow the directions in the 'labeling' directory in the TAUV-Tools repository to generate contents of the 'obj' folder. Compress this to 'obj.zip'. 
-2. Make adjustments to 'yolov4-custom.cfg' indicated by # comments. Change lines max_batches, steps, filters (x3), classes (x3).
+2. Make adjustments to 'yolov4-custom.cfg' indicated by # comments. Change lines max_batches, steps, classes (x3 at each [yolo] layer), filters (x3 at each [convolutional] layer).
 3. Edit 'obj.names' template file. Each class name is on a new line in the same order as in the 'class_list.txt' file in 'obj.zip'.  
-4. Edit 'obj.data' template file. Fill in the number of clases.
+4. Edit 'obj.data' template file. Fill in the number of classes.
 5. Ensure that the 'process.py' has the correct format (currently .jpg) matching training data. 
 6. Follow the following commands in the direcrory where you've saved this folder.
