@@ -1,4 +1,6 @@
-#command-line script: python3 "./tuning_helper.py" relative_path_to_file
+#command-line script for finding HSV filtering parameters in images
+
+#TO RUN: python3 "./tuning_helper.py" relative_path_to_file
 #where relative_path_to_file is a string path to a .jpg/.png/.mp4 file relative to current folder
 #other formats not accepted (e.g. .jpeg) and the script automatically deduces whether file is image or video without other command-line arguments
 
@@ -92,7 +94,7 @@ class Frame():
         print("Done.")
         sys.exit(code)
 
-#takes name of file as cmdline argument
+#takes relative pathname of file as only cmdline argument
 def main():
     file_name = sys.argv[1]
     if(file_name[-4:]==".png" or file_name[-4:]==".jpg"):
