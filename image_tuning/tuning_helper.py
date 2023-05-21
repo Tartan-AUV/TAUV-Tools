@@ -1,3 +1,7 @@
+#command-line script: python3 "./tuning_helper.py" relative_path_to_file
+#where relative_path_to_file is a string path to a .jpg/.png/.mp4 file relative to current folder
+#other formats not accepted (e.g. .jpeg) and the script automatically deduces whether file is image or video without other command-line arguments
+
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
