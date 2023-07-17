@@ -17,6 +17,11 @@ class Stats(Enum):
 
 class ThrustCurveGenerator:
     def __init__(self, data_fpath):
+        """
+        Generate thrust model for T200 thrusters from Blue Robotics data
+        :param data_fpath: file path to Blue Robotics .xlsx spreadsheet
+        """
+
         self.test_voltages = [10, 12, 14, 16, 18, 20]
         self.sheet_names = [f"{v} V" for v in self.test_voltages]
         dataframe = pd.read_excel(data_fpath, sheet_name=self.sheet_names)
@@ -51,14 +56,31 @@ class ThrustCurveGenerator:
             self.rev_data[k] = {v: self.data[k][v][:self.cutoff_point] for v in self.test_voltages}
 
     def quadratic_roots(self, a, b, c):
-        solns = [
-            (-b + math.sqrt(b ** 2 - 4 * a * c)) / (2 * a),
-            (-b - math.sqrt(b ** 2 - 4 * a * c)) / (2 * a),
-        ]
+        """
+        Solve for roots of quadratic polynomial
+        :param a: Coefficient of x^2
+        :param b: Coefficient of x
+        :param c: Constant coefficient
+        :return: All solutions to quadratic equation
+        """
+        desc = b ** 2 - 4 * a * c
+        if desc < 0: raise ArithmeticError
+        elif desc == 0:
+            return [(-b + math.sqrt(desc)) / (2 * a)]
 
-        return solns
+        return [(-b + math.sqrt(desc)) / (2 * a), (-b - math.sqrt(desc)) / (2 * a)]
     
     def bivar_thrust_model(self, fwd_coeffs, rev_coeffs):
+        """
+        Thrust vs. PWM model of the form a * pwm^2 + b * pwm + c * voltage^2 + d * voltage + e
+        i.e. quadratic in PWM and voltage
+        :param fwd_coeffs: Coefficients (a, b, c, d, e) for the forward thrust model
+        :param rev_coeffs: Coefficients (a, b, c, d, e) for the reverse thrust model
+        :return: The forward and inverse thrust functions. The inverse thrust function outputs
+        PWM for a given desired thrust and voltage. The forward thrust function outputs
+        thrust for a given PWM and voltage.
+        """
+
         def inv(thrust_des, v):
             if thrust_des < 0:
                 a1, b1, a2, b2, c = rev_coeffs
@@ -68,7 +90,9 @@ class ThrustCurveGenerator:
                 selector = max
                 
             new_c = a2 * v ** 2 + b2 * v + c - thrust_des
-            return selector(self.quadratic_roots(a1, b1, new_c))
+            
+            try: selector(self.quadratic_roots(a1, b1, new_c))
+            except ArithmeticError: return -1
 
         def fwd(pwm, v):
             if pwm >= self.data[Stats.PWM][10][self.cutoff_point]:
@@ -80,6 +104,17 @@ class ThrustCurveGenerator:
         return inv, fwd
 
     def linterp_thrust_model(self, fwd_polys, rev_polys):
+        """
+        Thrust vs. PWM model of the form a * pwm^2 + b * pwm + c, where 6 quadratic models are fit
+        at the test voltages of 10, 12, 14, 16, 18, 20, and for other voltages, the polynomial used
+        is a linear interpolation of the closest two voltage levels.
+        :param fwd_polys: Polynomials for the forward thrust fits for each voltage level
+        :param rev_polys: Polynomials for the reverse thrust fits for each voltage level
+        :return: The forward and inverse thrust functions. The inverse thrust function outputs
+        PWM for a given desired thrust and voltage. The forward thrust function outputs
+        thrust for a given PWM and voltage.
+        """
+
         def select_bounds(v):
             if v < 10 or v > 20:
                 raise LookupError
@@ -102,7 +137,7 @@ class ThrustCurveGenerator:
                 lower, upper = select_bounds(v)
             except LookupError:
                 print("Voltage outside operating range")
-                return
+                return -1
             scale = (v - lower) / 2
             
             if thrust_des < 0:
@@ -113,14 +148,16 @@ class ThrustCurveGenerator:
                 selector = max
                 
             (a, b, c) = (1 - scale) * polys[lower] + scale * polys[upper]
-            return selector(self.quadratic_roots(a, b, c - thrust_des))
+
+            try: selector(self.quadratic_roots(a, b, c - thrust_des))
+            except ArithmeticError: return -1
 
         def fwd(pwm, v):
             try:
                 lower, upper = select_bounds(v)
             except LookupError:
                 print("Voltage outside operating range")
-                return
+                return -1
             scale = (v - lower) / 2
 
             if pwm >= self.data[Stats.PWM][10][self.cutoff_point]:
@@ -134,6 +171,15 @@ class ThrustCurveGenerator:
         return inv, fwd
     
     def find_bivar_coeffs(self):
+        """
+        Find the coefficients (a, b, c, d, e) for the bivariate thrust model of the form
+        a * pwm^2 + b * pwm + c * voltage^2 + d * voltage + e through a least squares fit, solving
+        A * x = b.
+        Each row of the data matrix is [pwm^2, pwm, voltage^2, voltage, 1], a row of the b vector
+        is the resulting thrust force, and the x vector is [a, b, c, d, e].
+        :return: The least squares solution finding (a, b, c, d, e).
+        """
+
         def solve_dir(pwms, kgfs):
             data_pts = []
             b_pts = []
@@ -160,6 +206,12 @@ class ThrustCurveGenerator:
         return coeffs_fwd, coeffs_rev
 
     def find_linterp_polys(self):
+        """
+        Find the coefficients for each of the forward and reverse thrust models, i.e. find
+        quadratic fits of PWM vs. thrust for all voltages in forward and reverse directions
+        :return: The polynomials for the forward and reverse quadratic fits for each voltage level
+        """
+
         def solve_dir(pwms, kgfs):
             polynomials = {}
 
