@@ -56,7 +56,7 @@ def process_bag(current_bag):
             video_topics.append(topic['topic'])
     
     for topic, msg, t in bag.read_messages(topics=video_topics):
-        folder_name = topic.rsplit('/', 1)[-1]
+        folder_name = "-".join((topic.split('/')[-3:-1]))
         topic_path = os.path.join(bag_path, folder_name.replace('/', '-'))
         if not os.path.isdir(topic_path):
             os.mkdir(topic_path)

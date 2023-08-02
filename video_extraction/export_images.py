@@ -117,12 +117,10 @@ def main():
                 video_topics.append(topic['topic'])
                 total_messages += int(topic['messages'])
         
-        # bridge = CvBridge()
-
         count = 0
         printProgressBar(count, total_messages, prefix=f'{bag_name[0]} Progress:')
         for topic, msg, t in bag.read_messages(topics=video_topics):
-            folder_name = "-".join((topic.split('/') [-3:-1]))
+            folder_name = "-".join((topic.split('/')[-3:-1]))
             topic_path = os.path.join(bag_path, folder_name.replace('/', '-'))
             if not os.path.isdir(topic_path):
                 os.mkdir(topic_path)
@@ -134,9 +132,6 @@ def main():
             count += 1
             printProgressBar(count, total_messages, prefix=f'{bag_name[0]} Progress:')
         
-        # print('Creating tar for each topic...')
-        # tar_each_topic(bag_path)
-
         print('Creating video for each topic...')
         create_video(bag_path)
 
