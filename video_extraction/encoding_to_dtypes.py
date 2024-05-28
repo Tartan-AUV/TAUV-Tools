@@ -73,6 +73,9 @@ def image_to_numpy(msg):
     
     if channels == 1:
         data = data[...,0]
+
+    data = np.flip(data, -1)
+
     return data
 
 

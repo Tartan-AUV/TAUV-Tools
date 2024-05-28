@@ -107,8 +107,13 @@ def main():
 
         print(f'Extracting images from {bag_name[0]}{bag_name[1]}')
 
-        bag = rosbag.Bag(current_path, 'r')
-        topics = yaml.load(bag._get_yaml_info(), Loader=yaml.BaseLoader)['topics']
+        try:
+            bag = rosbag.Bag(current_path, 'r')
+            topics = yaml.load(bag._get_yaml_info(), Loader=yaml.BaseLoader)['topics']
+        except KeyError:
+            print('Could not get topics')
+            print('Continiong...')
+            continue
 
         video_topics = []
         total_messages = 0
