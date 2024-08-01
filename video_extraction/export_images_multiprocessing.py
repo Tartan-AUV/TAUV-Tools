@@ -16,7 +16,7 @@ parser.add_argument("--output_dir", help="Output directory.")
 
 args = parser.parse_args()
 
-NUM_OF_THREADS = mp.cpu_count()
+NUM_OF_THREADS = int(mp.cpu_count() / 2)
 
 def create_video(bag_dir): 
     for topic in os.listdir(bag_dir):

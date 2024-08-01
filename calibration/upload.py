@@ -2,12 +2,16 @@ import depthai
 import pathlib
 import numpy as np
 
-ip = "10.0.0.13"
-camera = depthai.CameraBoardSocket.RIGHT
+'''
+USE WITH CAUTION. This does not play nicely with stereo depth.
+'''
+
+ip = "10.0.0.12"
+camera = depthai.CameraBoardSocket.LEFT
 
 
 results_path = pathlib.Path(
-    "~/Documents/oakd_calibration/oakd_bottom-right/results"
+    "~/Documents/oakd_calibration/oakd_bottom-left/results"
 ).expanduser()
 
 
@@ -44,8 +48,12 @@ def main():
 
     (w, h) = (int(res[1]), int(res[0]))
 
-    calibration.setCameraIntrinsics(camera, mtx, w, h)
-    calibration.setDistortionCoefficients(camera, dist)
+    modified_mtx = np.array(calibration.getCameraIntrinsics(camera, w, h))
+    modified_mtx[0, 0] *= 1.33
+    modified_mtx[1, 1] *= 1.33
+
+    calibration.setCameraIntrinsics(camera, modified_mtx, w, h)
+    # calibration.setDistortionCoefficients(camera, dist)
 
     print("flashing...")
     success = device.flashCalibration(calibration)
